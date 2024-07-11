@@ -31,6 +31,7 @@ export enum ModelType {
   LINE_EDGE = 'line-edge',
   POLYLINE_EDGE = 'polyline-edge',
   BEZIER_EDGE = 'bezier-edge',
+  EDITABLE_EDGE = 'editable-edge',
   GRAPH = 'graph',
 }
 
