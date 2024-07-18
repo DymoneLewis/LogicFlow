@@ -104,6 +104,9 @@ const data = {
     },
   ],
 }
+let scale = 0
+let translateX = 0
+let translateY = 0
 
 export default function BasicNode() {
   const lfRef = useRef<LogicFlow>()
@@ -151,7 +154,8 @@ export default function BasicNode() {
         autoExpand: true,
         // metaKeyMultipleSelected: false,
         // adjustEdgeMiddle: true,
-        // stopMoveGraph: true,
+        stopZoomGraph: false,
+        stopMoveGraph: false,
         adjustEdgeStartAndEnd: true,
         // adjustEdge: false,
         allowRotate: true,
@@ -198,7 +202,13 @@ export default function BasicNode() {
           return type + '_' + Math.random()
         },
       })
-
+      lf.on('graph:transform', (data) => {
+        console.log('data', data)
+        const { SCALE_X, TRANSLATE_X, TRANSLATE_Y } = data.transform
+        scale = SCALE_X
+        translateX = TRANSLATE_X
+        translateY = TRANSLATE_Y
+      })
       lf.setTheme(customTheme)
       // 注册节点 or 边
       registerElements(lf)
@@ -310,6 +320,11 @@ export default function BasicNode() {
     lfRef?.current?.dnd.startDrag(node)
   }
 
+  const resetTransform = () => {
+    lfRef?.current?.zoom(scale, [-translateX, -translateY])
+    lfRef?.current?.translate(-translateX, -translateY)
+  }
+
   return (
     <Card title="Graph" className="graph-container">
       <Flex wrap="wrap" gap="small">
@@ -342,6 +357,9 @@ export default function BasicNode() {
           onClick={() => lfRef?.current?.clearData()}
         >
           清空数据
+        </Button>
+        <Button key="resetTranslate" type="primary" onClick={resetTransform}>
+          重置translate
         </Button>
         <Button key="changeType" type="primary" onClick={handleChangeNodeType}>
           切换节点为五角星
