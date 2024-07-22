@@ -87,6 +87,12 @@ export interface EditConfigInterface {
    * 不支持ctrl，ctrl会触发contextmenu
    */
   multipleSelectKey?: string
+  /**
+   * 节点连接默认起终锚点index
+   * 考虑使用方不一定知道锚点Id，所以使用index记录
+   */
+  nodeConnectTolerance?: number
+  anchorConnectTolerance?: number
 }
 
 const SilentConfig = {
@@ -127,6 +133,8 @@ const keys = [
   'edgeTextDraggable',
   'multipleSelectKey',
   'autoExpand',
+  'nodeConnectTolerance',
+  'anchorConnectTolerance',
 ]
 /**
  * 页面编辑配置
@@ -151,6 +159,8 @@ export class EditConfigModel {
   @observable nodeTextDraggable = false
   @observable edgeTextDraggable = false
   @observable autoExpand = false
+  @observable nodeConnectTolerance = 5
+  @observable anchorConnectTolerance = 0
   multipleSelectKey = ''
   defaultConfig = {} // 设置为静默模式之前的配置，在取消静默模式后恢复
   constructor(config: EditConfigInterface) {
@@ -205,6 +215,7 @@ export class EditConfigModel {
       })
     }
     const userConfig = pick(config, keys)
+    console.log('userConfig', config, assign(conf, userConfig), userConfig)
     return assign(conf, userConfig)
   }
   getConfig() {

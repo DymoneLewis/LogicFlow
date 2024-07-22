@@ -34,9 +34,11 @@ export const defaultTheme: LogicFlow.Theme = {
     r: 4,
     hover: {
       r: 10,
-      fill: '#949494',
+      fill: '#ffffff',
       fillOpacity: 0.5,
-      stroke: '#949494',
+      stroke: '#aeaeae',
+      strokeWidth: 2,
+      strokeDasharray: '3,2',
     },
   },
 

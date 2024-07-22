@@ -88,6 +88,7 @@ export enum EventType {
   ADJUST_POINT_DRAG = 'adjustPoint:drag',
   ADJUST_POINT_DROP = 'adjustPoint:drop',
   ADJUST_POINT_DRAGEND = 'adjustPoint:dragend',
+  ADJUST_POINT_NOT_ALLOWED = 'adjustPoint:not-allowed',
 
   // Blank events
   BLANK_MOUSEDOWN = 'blank:mousedown',

@@ -79,6 +79,21 @@ export class AdjustPoint extends Component<IProps, IState> {
   }
 
   handleMouseDown = (ev: MouseEvent) => {
+    const { edgeModel, type, graphModel } = this.props
+    const {
+      properties: { silentStartPoint, silentEndPoint },
+    } = edgeModel
+    // 如果是起点调整点，但不允许调整起点 或者 是终点调整点，但不允许调整终点，就return
+    if (
+      (type === AdjustType.SOURCE && silentStartPoint) ||
+      (type === AdjustType.TARGET && silentEndPoint)
+    ) {
+      graphModel.eventCenter.emit(EventType.ADJUST_POINT_NOT_ALLOWED, {
+        data: edgeModel.getData(),
+        msg: "current edge's point is not allowed to adjust",
+      })
+      return
+    }
     if (this.stepDrag) {
       this.stepDrag.handleMouseDown(ev)
     }
@@ -86,6 +101,7 @@ export class AdjustPoint extends Component<IProps, IState> {
   onDragStart = () => {
     const { x, y, edgeModel } = this.props
     const { startPoint, endPoint, pointsList } = edgeModel
+
     // 记录下原始路径信息，在调整中，如果放弃调整，进行路径还原
     this.oldEdge = {
       startPoint,
@@ -123,6 +139,7 @@ export class AdjustPoint extends Component<IProps, IState> {
       },
       graphModel,
     )
+    console.log('info', info)
     // 如果一定的坐标能够找到目标节点，预结算当前节点与目标节点的路径进行展示
     if (info && info.node && this.isAllowAdjust(info).pass) {
       let params: {

@@ -1500,7 +1500,6 @@ export namespace LogicFlow {
     properties?: PropertiesType
     virtual?: boolean // 是否虚拟节点
     rotate?: number
-
     [key: string]: any
   }
 
@@ -1526,6 +1525,8 @@ export namespace LogicFlow {
     pointsList?: Point[]
     zIndex?: number
     properties?: PropertiesType
+    silentStartPoint?: boolean
+    silentEndPoint?: boolean
   }
 
   export interface EdgeData extends EdgeConfig {

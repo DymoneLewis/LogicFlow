@@ -1,4 +1,4 @@
-import { assign, cloneDeep, find, isUndefined } from 'lodash-es'
+import { set, assign, cloneDeep, find, isUndefined } from 'lodash-es'
 import { action, computed, observable, toJS } from 'mobx'
 import { BaseNodeModel, GraphModel, Model } from '..'
 import LogicFlow from '../../LogicFlow'
@@ -311,16 +311,18 @@ export class BaseEdgeModel implements IBaseEdgeModel {
         `未在节点上找到指定的起点锚点${sourceAnchorId}，已使用默认锚点作为起点`,
       )
     }
-    sourceAnchors.forEach((anchor) => {
-      const distance = twoPointDistance(anchor, targetNode)
-      if (minDistance === undefined) {
-        minDistance = distance
-        position = anchor
-      } else if (distance < minDistance) {
-        minDistance = distance
-        position = anchor
-      }
-    })
+    if (!position) {
+      sourceAnchors.forEach((anchor) => {
+        const distance = twoPointDistance(anchor, targetNode)
+        if (minDistance === undefined) {
+          minDistance = distance
+          position = anchor
+        } else if (distance < minDistance) {
+          minDistance = distance
+          position = anchor
+        }
+      })
+    }
     return position
   }
 
@@ -346,18 +348,20 @@ export class BaseEdgeModel implements IBaseEdgeModel {
         `未在节点上找到指定的终点锚点${targetAnchorId}，已使用默认锚点作为终点`,
       )
     }
-    targetAnchors.forEach((anchor) => {
-      if (!this.startPoint) return // 如果此时 this.startPoint 为 undefined，直接返回
+    if (!position) {
+      targetAnchors.forEach((anchor) => {
+        if (!this.startPoint) return // 如果此时 this.startPoint 为 undefined，直接返回
 
-      const distance = twoPointDistance(anchor, this.startPoint)
-      if (minDistance === undefined) {
-        minDistance = distance
-        position = anchor
-      } else if (distance < minDistance) {
-        minDistance = distance
-        position = anchor
-      }
-    })
+        const distance = twoPointDistance(anchor, this.startPoint)
+        if (minDistance === undefined) {
+          minDistance = distance
+          position = anchor
+        } else if (distance < minDistance) {
+          minDistance = distance
+          position = anchor
+        }
+      })
+    }
     return position
   }
 
@@ -416,7 +420,7 @@ export class BaseEdgeModel implements IBaseEdgeModel {
    */
   @action
   setProperty(key: string, val: any): void {
-    this.properties[key] = formatData(val)
+    set(this.properties, key, formatData(val))
     this.setAttributes()
   }
 

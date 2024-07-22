@@ -103,6 +103,16 @@ const data = {
       y: 94,
     },
   ],
+  edges: [
+    {
+      sourceNodeId: 'custom-node-1',
+      targetNodeId: 'custom-node-2',
+      type: 'bezier',
+      properties: {
+        silentEndPoint: true,
+      },
+    },
+  ],
 }
 let scale = 0
 let translateX = 0
@@ -157,6 +167,8 @@ export default function BasicNode() {
         stopZoomGraph: false,
         stopMoveGraph: false,
         adjustEdgeStartAndEnd: true,
+        nodeConnectTolerance: 30,
+        anchorConnectTolerance: 30,
         // adjustEdge: false,
         allowRotate: true,
         // allowResize: true,
@@ -208,6 +220,9 @@ export default function BasicNode() {
         scale = SCALE_X
         translateX = TRANSLATE_X
         translateY = TRANSLATE_Y
+      })
+      lf.on('adjustPoint:not-allowed', ({ data, msg }) => {
+        console.log('data', data, msg)
       })
       lf.setTheme(customTheme)
       // 注册节点 or 边

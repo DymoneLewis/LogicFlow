@@ -184,7 +184,6 @@ export class BaseNodeModel implements IBaseNodeModel {
       const nodeId = this.createId()
       data.id = nodeId || globalId || createUuid()
     }
-
     this.formatText(data)
     // 在下面又将 NodeConfig 中的数据赋值给了 this，应该会触发 setAttributes，确认是否符合预期
     assign(this, pickNodeConfig(data)) // TODO: 确认 constructor 中赋值 properties 是否必要
@@ -385,6 +384,8 @@ export class BaseNodeModel implements IBaseNodeModel {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getAnchorStyle(_anchorInfo?: Point): LogicFlow.AnchorTheme {
     const { anchor } = this.graphModel.theme
+    const { anchorConnectTolerance } = this.graphModel.editConfigModel
+    console.log('anchorConnectTolerance', anchorConnectTolerance)
     // 防止被重写覆盖主题。
     return cloneDeep(anchor)
   }
@@ -576,7 +577,10 @@ export class BaseNodeModel implements IBaseNodeModel {
    * 手动连接边到节点时，需要连接的锚点
    */
   public getTargetAnchor(position: Point): Model.AnchorInfo {
-    return getClosestAnchor(position, this)
+    const {
+      editConfigModel: { anchorConnectTolerance },
+    } = this.graphModel
+    return getClosestAnchor(position, this, anchorConnectTolerance)
   }
 
   /**

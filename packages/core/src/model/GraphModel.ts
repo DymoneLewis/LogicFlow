@@ -1,4 +1,4 @@
-import { find, forEach, map } from 'lodash-es'
+import { assign, find, forEach, map } from 'lodash-es'
 import { action, computed, observable } from 'mobx'
 import {
   BaseEdgeModel,
@@ -126,6 +126,7 @@ export class GraphModel {
       edgeGenerator,
       animation,
       customTrajectory,
+      anchorConnectTolerance = 10,
     } = options
     this.rootEl = container
     this.partial = !!partial
@@ -134,6 +135,7 @@ export class GraphModel {
       this.gridSize = grid.size || 1 // 默认 gridSize 设置为 1
     }
     this.theme = setupTheme(options.style)
+    assign(this.theme, { anchor: { hover: { r: anchorConnectTolerance } } })
     this.edgeType = options.edgeType || 'polyline'
     this.animation = setupAnimation(animation)
     this.overlapMode = options.overlapMode || OverlapMode.DEFAULT

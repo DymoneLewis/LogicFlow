@@ -15,6 +15,7 @@ import {
   createRaf,
   TranslateMatrix,
   IDragParams,
+  getClosestAnchor,
   // RotateMatrix,
 } from '../../util'
 import RotateControlPoint from '../Rotate'
@@ -396,11 +397,29 @@ export abstract class BaseNode<P extends IProps> extends Component<P, IState> {
   // 为什么将hover状态放到model中？
   // 因为自定义节点的时候，可能会基于hover状态自定义不同的样式。
   setHoverOn = (ev: MouseEvent) => {
+    console.log('ev', ev)
     const { model, graphModel } = this.props
+    const {
+      eventCenter,
+      editConfigModel: { anchorConnectTolerance },
+    } = graphModel
     if (model.isHovered) return
     const nodeData = model.getData()
     model.setHovered(true)
-    graphModel.eventCenter.emit(EventType.NODE_MOUSEENTER, {
+    const { clientX, clientY } = ev
+    const {
+      canvasOverlayPosition: { x, y },
+    } = graphModel.getPointByClient({
+      x: clientX,
+      y: clientY,
+    })
+    const cloestAnchor = getClosestAnchor(
+      { x, y },
+      model,
+      anchorConnectTolerance,
+    )
+    console.log('cloestAnchor', cloestAnchor)
+    eventCenter.emit(EventType.NODE_MOUSEENTER, {
       data: nodeData,
       e: ev,
     })

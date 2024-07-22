@@ -96,8 +96,28 @@ const data = {
         style: {
           radius: 20,
         },
+        _connectValidTolerance: 20,
       },
     },
+    // {
+    //   id: 'custom-node-3',
+    //   // rotate: 1.1722738811284763,
+    //   text: {
+    //     x: 600,
+    //     y: 200,
+    //     value: 'node-1',
+    //   },
+    //   type: 'rect',
+    //   x: 600,
+    //   y: 200,
+    //   properties: {
+    //     width: 80,
+    //     height: 120,
+    //     style: {
+    //       radius: 20,
+    //     },
+    //   },
+    // },
     {
       id: 'custom-node-2',
       text: 'node-2',
@@ -160,6 +180,8 @@ export default function BasicNode() {
         allowRotate: true,
         // allowResize: true,
         edgeTextEdit: true,
+        nodeConnectTolerance: 30,
+        anchorConnectTolerance: 30,
         keyboard: {
           enabled: true,
           // shortcuts: [

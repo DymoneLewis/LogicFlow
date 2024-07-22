@@ -92,6 +92,8 @@ export namespace Options {
     pluginsOptions?: Record<string, any>
     disabledPlugins?: string[]
     disabledTools?: string[]
+    nodeConnectTolerance?: number
+    anchorConnectTolerance?: number
 
     idGenerator?: (type?: string) => string
     edgeGenerator?: EdgeGeneratorType

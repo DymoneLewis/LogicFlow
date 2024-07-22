@@ -27,9 +27,9 @@ export function sequenceFlowFactory(props?: any): {
       }
       const properties: SequenceFlowType = {
         ...(props || {}),
+        isDefaultFlow: false,
         ...data.properties,
         // panels: ['condition'],
-        isDefaultFlow: false,
       }
       data.properties = properties
 

@@ -1,4 +1,4 @@
-import { pick } from 'lodash-es'
+import { pick, reduce } from 'lodash-es'
 import { createElement as h } from 'preact/compat'
 import { getBytesLength } from './edge'
 import LogicFlow from '../LogicFlow'
@@ -20,6 +20,25 @@ import NodeConfig = LogicFlow.NodeConfig
 import LineSegment = LogicFlow.LineSegment
 import AnchorInfo = Model.AnchorInfo
 
+type RadiusCircle = {
+  x: number
+  y: number
+  r: number
+}
+
+export type NodeBBox = {
+  x: number
+  y: number
+  width: number
+  height: number
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+  centerX: number
+  centerY: number
+}
+
 /* 获取所有锚点 */
 export const getAnchors = (data: BaseNodeModel) => {
   const { anchors } = data
@@ -37,12 +56,20 @@ export const targetNodeInfo = (
   position: Point,
   graphModel: GraphModel,
 ): NodeContaint => {
-  const { nodes } = graphModel
+  const {
+    nodes,
+    editConfigModel: { nodeConnectTolerance, anchorConnectTolerance },
+  } = graphModel
   let nodeInfo: NodeContaint
   for (let i = nodes.length - 1; i >= 0; i--) {
     const targetNode = nodes[i]
-    const inNode = isInNodeBbox(position, targetNode)
-    if (inNode) {
+    const inNode = isInNodeBbox(position, targetNode, nodeConnectTolerance)
+    const nearAnchor = isNearAnchor(
+      position,
+      targetNode,
+      anchorConnectTolerance,
+    )
+    if (inNode && nearAnchor) {
       const anchorInfo = targetNode.getTargetAnchor(position)
       if (anchorInfo) {
         // 不能连接到没有锚点的节点
@@ -80,6 +107,7 @@ const isNodeHigher = (
 export const getClosestAnchor = (
   position: Point,
   node: BaseNodeModel,
+  tolerance: number,
 ): AnchorInfo => {
   const anchors = getAnchors(node)
   let closest: AnchorInfo
@@ -95,10 +123,12 @@ export const getClosestAnchor = (
           x: anchors[i].x,
           y: anchors[i].y,
           id: anchors[i].id,
+          isHovered: len <= tolerance,
         },
       }
     }
   }
+
   return closest!
 }
 
@@ -125,42 +155,94 @@ export const isInNode = (position: Point, node: BaseNodeModel): boolean => {
   }
   return inNode
 }
-export const isInNodeBbox = (position: Point, node: BaseNodeModel): boolean => {
+export const isInNodeBbox = (
+  position: Point,
+  node: BaseNodeModel,
+  tolerance: number,
+): boolean => {
   let inNode = false
-  const offset = 5
   const bBox = getNodeBBox(node)
   if (
-    position.x >= bBox.minX - offset &&
-    position.x <= bBox.maxX + offset &&
-    position.y >= bBox.minY - offset &&
-    position.y <= bBox.maxY + offset
+    position.x >= bBox.minX - tolerance &&
+    position.x <= bBox.maxX + tolerance &&
+    position.y >= bBox.minY - tolerance &&
+    position.y <= bBox.maxY + tolerance
   ) {
     inNode = true
   }
   return inNode
 }
-
-export type NodeBBox = {
-  x: number
-  y: number
-  width: number
-  height: number
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
-  centerX: number
-  centerY: number
+export const isNearAnchor = (
+  position: Point,
+  node: BaseNodeModel,
+  tolerance: number,
+): boolean => {
+  if (!tolerance) return true
+  return reduce(
+    node.anchors,
+    (result, anchor) => {
+      const len = distance(position.x, position.y, anchor.x, anchor.y)
+      return result || len <= Number(tolerance)
+    },
+    false,
+  )
 }
 
 /* 获取节点bbox */
 export const getNodeBBox = (node: BaseNodeModel): NodeBBox => {
-  const { x, y, width, height } = node
+  const { x, y, width, height, rotate } = node
+  return rotate
+    ? getRotatedNodeBBox(node)
+    : {
+        minX: x - width / 2,
+        minY: y - height / 2,
+        maxX: x + width / 2,
+        maxY: y + height / 2,
+        x,
+        y,
+        width,
+        height,
+        centerX: x,
+        centerY: y,
+      }
+}
+// 计算节点旋转后，点point的坐标
+export const rotatePoint = (
+  point: Point,
+  rad: number,
+  rotateCenter: Point,
+): Point => {
+  const cos = Math.cos(rad)
+  const sin = Math.sin(rad)
+  const translatedX = point.x - rotateCenter.x
+  const translatedY = point.y - rotateCenter.y
   return {
-    minX: x - width / 2,
-    minY: y - height / 2,
-    maxX: x + width / 2,
-    maxY: y + height / 2,
+    x: translatedX * cos - translatedY * sin + rotateCenter.x,
+    y: translatedX * sin + translatedY * cos + rotateCenter.y,
+  }
+}
+
+export const getNodeVertices = (node: BaseNodeModel): Point[] => {
+  const { x, y, width, height } = node
+  return [
+    { x: x - width / 2, y: y - height / 2 }, // 左上
+    { x: x + width / 2, y: y - height / 2 }, // 右上
+    { x: x - width / 2, y: y + height / 2 }, // 左下
+    { x: x + width / 2, y: y + height / 2 }, // 右下
+  ]
+}
+
+export const getRotatedNodeBBox = (node: BaseNodeModel): NodeBBox => {
+  const { x, y, width, height, rotate } = node
+  const vertices = getNodeVertices(node)
+  const rotatedVertices = vertices.map((vertex) =>
+    rotatePoint(vertex, rotate, { x, y }),
+  )
+  return {
+    minX: Math.min(...rotatedVertices.map((item) => item.x)),
+    minY: Math.min(...rotatedVertices.map((item) => item.y)),
+    maxX: Math.max(...rotatedVertices.map((item) => item.x)),
+    maxY: Math.max(...rotatedVertices.map((item) => item.y)),
     x,
     y,
     width,
@@ -169,11 +251,7 @@ export const getNodeBBox = (node: BaseNodeModel): NodeBBox => {
     centerY: y,
   }
 }
-type RadiusCircle = {
-  x: number
-  y: number
-  r: number
-}
+
 export const getRectRadiusCircle = (
   node: BaseNodeModel,
 ): [RadiusCircle, RadiusCircle, RadiusCircle, RadiusCircle] => {

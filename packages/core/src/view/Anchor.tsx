@@ -123,7 +123,7 @@ class Anchor extends Component<IProps, IState> {
       eventCenter,
       width,
       height,
-      editConfigModel: { autoExpand, stopMoveGraph },
+      editConfigModel: { autoExpand, stopMoveGraph, anchorConnectTolerance },
     } = graphModel
     const { clientX, clientY } = event
     const {
@@ -137,15 +137,14 @@ class Anchor extends Component<IProps, IState> {
       cancelRaf(this.t)
     }
     let nearBoundary: number[] = [] // TODO: 定义元组类型 Tuple
-    const size = 10
-    if (x < 10) {
-      nearBoundary = [size, 0]
-    } else if (x + 10 > width) {
-      nearBoundary = [-size, 0]
-    } else if (y < 10) {
-      nearBoundary = [0, size]
-    } else if (y + 10 > height) {
-      nearBoundary = [0, -size]
+    if (x < anchorConnectTolerance) {
+      nearBoundary = [anchorConnectTolerance, 0]
+    } else if (x + anchorConnectTolerance > width) {
+      nearBoundary = [-anchorConnectTolerance, 0]
+    } else if (y < anchorConnectTolerance) {
+      nearBoundary = [0, anchorConnectTolerance]
+    } else if (y + anchorConnectTolerance > height) {
+      nearBoundary = [0, -anchorConnectTolerance]
     }
     this.setState({
       endX: x1,
@@ -238,6 +237,7 @@ class Anchor extends Component<IProps, IState> {
     ) {
       this.preTargetNode.setElementState(ElementState.DEFAULT)
     }
+    console.log('checkEnd', dragging, info)
     // 没有dragging就结束边
     if (!dragging) return
     if (info && info.node) {
@@ -248,6 +248,7 @@ class Anchor extends Component<IProps, IState> {
         this.sourceRuleResults.get(targetInfoId) || {}
       const { isAllPass: isTargetPass, msg: targetMsg } =
         this.targetRuleResults.get(targetInfoId) || {}
+      console.log('isSourcePass && isTargetPass', isSourcePass, isTargetPass)
       if (isSourcePass && isTargetPass) {
         targetNode.setElementState(ElementState.DEFAULT)
         const targetNodeModel = graphModel.getNodeModelById(info.node.id)
@@ -340,6 +341,7 @@ class Anchor extends Component<IProps, IState> {
       // 实时提示出即将链接的锚点
       if (isSourcePass && isTargetPass) {
         targetNode.setElementState(ElementState.ALLOW_CONNECT)
+        info.anchor
       } else {
         targetNode.setElementState(ElementState.NOT_ALLOW_CONNECT)
       }
@@ -355,7 +357,7 @@ class Anchor extends Component<IProps, IState> {
   isShowLine() {
     const { startX, startY, endX, endY } = this.state
     const v = distance(startX, startY, endX, endY)
-    return v > 10
+    return v > 0
   }
 
   render() {
